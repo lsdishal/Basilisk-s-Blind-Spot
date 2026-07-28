@@ -53,11 +53,23 @@ export type RawAuditResult = {
 };
 
 async function launchBrowser(): Promise<Browser> {
+  // On Railway/production, use system Chromium via env var
+  const executablePath = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
+
+  const launchOptions = {
+    headless: true,
+    args: [
+      "--disable-dev-shm-usage",
+      "--no-sandbox",
+      "--disable-gpu",
+      "--disable-setuid-sandbox",
+      "--single-process",
+    ],
+    ...(executablePath ? { executablePath } : {}),
+  };
+
   try {
-    return await chromium.launch({
-      headless: true,
-      args: ["--disable-dev-shm-usage", "--no-sandbox", "--disable-gpu"],
-    });
+    return await chromium.launch(launchOptions);
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     const isMissingPlaywrightBrowser =
